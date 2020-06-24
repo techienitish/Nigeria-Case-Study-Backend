@@ -76,16 +76,28 @@ class Case(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Job(models.Model):
     case = models.ForeignKey(Case, on_delete=models.CASCADE)
     serverJobId = models.IntegerField()
-    results = models.ManyToManyField(CallDetailRecord)
+    results = models.ManyToManyField(CallDetailRecord, blank=True)
     status = models.CharField(
         max_length=32,
         choices=[
-            ('Pending','Pending'),
-            ('Completed','Completed')
+            ('Pending', 'Pending'),
+            ('Completed', 'Completed')
+        ]
+    )
+    category = models.CharField(
+        max_length=32,
+        choices=[
+            ('IMSI', 'IMSI'),
+            ('IMEI', 'IMEI'),
+            ('MSISDN', 'MSISDN'),
+            ('Cell Site', 'Cell Site'),
         ]
     )
     createdAt = models.DateTimeField(auto_now_add=True)
