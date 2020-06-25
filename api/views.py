@@ -17,7 +17,7 @@ class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ['case', 'serverJobId', 'status', 'category']
+    filterset_fields = ['case', 'serverJobId', 'status', 'category', 'eventStartDate', 'eventEndDate']
 
 
 class CallDetailRecordViewSet(viewsets.ModelViewSet):

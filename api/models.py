@@ -100,5 +100,7 @@ class Job(models.Model):
             ('Cell Site', 'Cell Site'),
         ]
     )
+    eventStartDate = models.DateTimeField(default=None, null=True, blank=True)
+    eventEndDate = models.DateTimeField(default=None, null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
