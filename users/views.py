@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.authtoken.models import Token
 
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -15,10 +16,24 @@ group_parameter = openapi.Parameter(
     description='analysts, supervisors, admins',
     type=openapi.TYPE_STRING
 )
+token_parameter = openapi.Parameter(
+    'Authorization',
+    openapi.IN_HEADER,
+    description='Token <TOKEN>',
+    type=openapi.TYPE_STRING
+)
 
 
 class LogoutView(APIView):
 
+    @swagger_auto_schema(
+        operation_description="Create new user",
+        manual_parameters=[token_parameter],
+        responses={
+            400: 'Invalid token',
+            200: 'Logged out successfully'
+        }
+    )
     def post(self, request, format=None):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
@@ -44,14 +59,17 @@ class UserView(APIView):
     )
     def post(self, request, format='json'):
         serializer = UserSerializer(data=request.data)
-        user_group = request.data['group']
         try:
+            user_group = request.data['group']
             group = Group.objects.get(name=user_group)
             if serializer.is_valid() and group != None:
                 user = serializer.save()
                 if user:
+                    user.is_staff = True
                     user.groups.add(group)
+                    token = Token.objects.create(user=user)
                     response_data = serializer.data
+                    response_data['token'] = token.key
                     del response_data['password']
                     return Response(response_data, status=status.HTTP_201_CREATED)
 
@@ -69,7 +87,7 @@ class UserView(APIView):
         }
     )
     def get(self, request, format='json'):
-        group_filter = request.query_params['group']
+        group_filter = request.query_params.get('group', None)
         if group_filter:
             users = User.objects.filter(groups__name__in=[group_filter])
         else:
