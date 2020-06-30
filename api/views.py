@@ -26,3 +26,10 @@ class JobViewSet(viewsets.ModelViewSet):
 class CallDetailRecordViewSet(viewsets.ModelViewSet):
     queryset = CallDetailRecord.objects.all()
     serializer_class = CallDetailRecordSerializer
+
+
+class TeamViewSet(viewsets.ModelViewSet):
+    queryset = Team.objects.all()
+    serializer_class = TeamSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ['supervisor']
