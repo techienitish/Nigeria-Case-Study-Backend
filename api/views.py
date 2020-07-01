@@ -11,7 +11,7 @@ class CaseViewSet(viewsets.ModelViewSet):
     queryset = Case.objects.all()
     serializer_class = CaseSerializer
     filter_backends = (filters.DjangoFilterBackend, SearchFilter,)
-    filterset_fields = ['analyst', 'status']
+    filterset_fields = ['analysts', 'supervisors', 'category']
     search_fields = ['name', 'description']
 
 
@@ -19,17 +19,9 @@ class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ['case', 'serverJobId', 'status',
-                        'category', 'eventStartDate', 'eventEndDate']
+    filterset_fields = ['case', 'serverJobId', 'status', 'category', 'eventStartDate', 'eventEndDate']
 
 
 class CallDetailRecordViewSet(viewsets.ModelViewSet):
     queryset = CallDetailRecord.objects.all()
     serializer_class = CallDetailRecordSerializer
-
-
-class TeamViewSet(viewsets.ModelViewSet):
-    queryset = Team.objects.all()
-    serializer_class = TeamSerializer
-    filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ['supervisor']

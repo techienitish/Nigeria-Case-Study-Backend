@@ -16,8 +16,3 @@ class CallDetailRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallDetailRecord
         fields = '__all__'
-
-class TeamSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Team
-        fields = '__all__'

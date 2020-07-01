@@ -5,11 +5,20 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authtoken.models import Token
 
+from api.models import *
+from api.serializers import *
+
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 
 from .serializers import UserSerializer
 
+user_parameter = openapi.Parameter(
+    'username',
+    openapi.IN_QUERY,
+    description='username',
+    type=openapi.TYPE_STRING
+)
 group_parameter = openapi.Parameter(
     'group',
     openapi.IN_QUERY,
@@ -80,7 +89,7 @@ class UserView(APIView):
 
     @swagger_auto_schema(
         operation_description="Get users",
-        manual_parameters=[group_parameter],
+        manual_parameters=[group_parameter, user_parameter],
         responses={
             400: 'User not found',
             200: UserSerializer(many=True)
@@ -88,10 +97,18 @@ class UserView(APIView):
     )
     def get(self, request, format='json'):
         group_filter = request.query_params.get('group', None)
+        user_filter = request.query_params.get('username', None)
         if group_filter:
             users = User.objects.filter(groups__name__in=[group_filter])
+        elif user_filter:
+            user = User.objects.get(username__iexact=user_filter)
+            serializer = UserSerializer(user)
+            response_data = serializer.data
+            del response_data['password']
+            return Response(response_data, status=status.HTTP_200_OK)
         else:
             users = User.objects.all()
+
         serializer = UserSerializer(users, many=True)
         if serializer:
             response_data = serializer.data

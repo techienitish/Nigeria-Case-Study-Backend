@@ -52,13 +52,13 @@ class CallDetailRecord(models.Model):
     locationUpdateType = models.IntegerField()
     imeiStatus = models.IntegerField()
 
-class Team(models.Model):
-    supervisor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='supervisor')
-    analysts = models.ManyToManyField(User, blank=True, related_name='analyst')
 
 class Case(models.Model):
     name = models.CharField(max_length=128)
-    analyst = models.ForeignKey(User, on_delete=models.CASCADE)
+    supervisors = models.ManyToManyField(
+        User, blank=True, related_name='supervisors')
+    analysts = models.ManyToManyField(
+        User, blank=True, related_name='analysts')
     description = models.CharField(max_length=512)
     category = models.CharField(
         max_length=32,
