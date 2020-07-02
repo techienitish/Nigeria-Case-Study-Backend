@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter
+from rest_framework.pagination import PageNumberPagination
 from django_filters import rest_framework as filters
 
 from .models import *
@@ -13,6 +14,7 @@ class CaseViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend, SearchFilter,)
     filterset_fields = ['analysts', 'supervisors', 'category']
     search_fields = ['name', 'description']
+    pagination_class = PageNumberPagination
 
 
 class JobViewSet(viewsets.ModelViewSet):
