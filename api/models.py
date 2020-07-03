@@ -2,7 +2,63 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class Case(models.Model):
+    name = models.CharField(max_length=128)
+    supervisors = models.ManyToManyField(
+        User, blank=True, related_name='supervisors')
+    analysts = models.ManyToManyField(
+        User, blank=True, related_name='analysts')
+    description = models.CharField(max_length=512)
+    category = models.CharField(
+        max_length=32,
+        choices=[
+            ('Robbery', 'Robbery'),
+            ('Theft', 'Theft'),
+            ('Bomb Blast', 'Bomb Blast'),
+        ]
+    )
+    status = models.CharField(
+        max_length=32,
+        choices=[
+            ('Open', 'Open'),
+            ('Close', 'Close'),
+            ('Delayed', 'Delayed')
+        ]
+    )
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Job(models.Model):
+    case = models.ForeignKey(Case, on_delete=models.CASCADE)
+    serverJobId = models.IntegerField(default=-1)
+    status = models.CharField(
+        max_length=32,
+        choices=[
+            ('Pending', 'Pending'),
+            ('Completed', 'Completed')
+        ]
+    )
+    category = models.CharField(
+        max_length=32,
+        choices=[
+            ('IMSI', 'IMSI'),
+            ('IMEI', 'IMEI'),
+            ('MSISDN', 'MSISDN'),
+            ('Cell Site', 'Cell Site'),
+        ]
+    )
+    eventStartDate = models.DateTimeField(default=None, null=True, blank=True)
+    eventEndDate = models.DateTimeField(default=None, null=True, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+
 class CallDetailRecord(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, default=-1)
     timestamp = models.IntegerField()
     servedIMSI = models.IntegerField()
     servedIMEI = models.IntegerField()
@@ -51,59 +107,3 @@ class CallDetailRecord(models.Model):
     locationEstimate = models.IntegerField()
     locationUpdateType = models.IntegerField()
     imeiStatus = models.IntegerField()
-
-
-class Case(models.Model):
-    name = models.CharField(max_length=128)
-    supervisors = models.ManyToManyField(
-        User, blank=True, related_name='supervisors')
-    analysts = models.ManyToManyField(
-        User, blank=True, related_name='analysts')
-    description = models.CharField(max_length=512)
-    category = models.CharField(
-        max_length=32,
-        choices=[
-            ('Robbery', 'Robbery'),
-            ('Theft', 'Theft'),
-            ('Bomb Blast', 'Bomb Blast'),
-        ]
-    )
-    status = models.CharField(
-        max_length=32,
-        choices=[
-            ('Open', 'Open'),
-            ('Close', 'Close'),
-            ('Delayed', 'Delayed')
-        ]
-    )
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Job(models.Model):
-    case = models.ForeignKey(Case, on_delete=models.CASCADE)
-    serverJobId = models.IntegerField()
-    results = models.ManyToManyField(CallDetailRecord, blank=True)
-    status = models.CharField(
-        max_length=32,
-        choices=[
-            ('Pending', 'Pending'),
-            ('Completed', 'Completed')
-        ]
-    )
-    category = models.CharField(
-        max_length=32,
-        choices=[
-            ('IMSI', 'IMSI'),
-            ('IMEI', 'IMEI'),
-            ('MSISDN', 'MSISDN'),
-            ('Cell Site', 'Cell Site'),
-        ]
-    )
-    eventStartDate = models.DateTimeField(default=None, null=True, blank=True)
-    eventEndDate = models.DateTimeField(default=None, null=True, blank=True)
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)

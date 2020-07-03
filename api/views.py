@@ -21,9 +21,13 @@ class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    filterset_fields = ['case', 'serverJobId', 'status', 'category', 'eventStartDate', 'eventEndDate']
+    filterset_fields = ['case', 'serverJobId', 'status',
+                        'category', 'eventStartDate', 'eventEndDate']
 
 
 class CallDetailRecordViewSet(viewsets.ModelViewSet):
     queryset = CallDetailRecord.objects.all()
     serializer_class = CallDetailRecordSerializer
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_fields = ['job', ]
+    pagination_class = PageNumberPagination
