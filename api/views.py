@@ -8,11 +8,16 @@ from .models import *
 from .serializers import *
 
 
+class DepartmentViewSet(viewsets.ModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+
 class CaseViewSet(viewsets.ModelViewSet):
     queryset = Case.objects.all()
     serializer_class = CaseSerializer
     filter_backends = (filters.DjangoFilterBackend, SearchFilter,)
-    filterset_fields = ['analysts', 'supervisors', 'category']
+    filterset_fields = ['accounts', 'category']
     search_fields = ['name', 'description']
     pagination_class = PageNumberPagination
 

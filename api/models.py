@@ -1,17 +1,49 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Department(models.Model):
     name = models.CharField(max_length=128)
     zone = models.CharField(max_length=128)
-    head = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class Account(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='user'
+    )
+    disabled = models.BooleanField(default=False)
+    designation = models.CharField(
+        max_length=32,
+        choices=[
+            ('Admin', 'Admin'),
+            ('Supervisor', 'Supervisor'),
+            ('Analyst', 'Analyst'),
+        ]
+    )
+    department = models.ForeignKey(
+        Department, on_delete=models.CASCADE, related_name='department'
+    )
+
+    def __str__(self):
+        return self.user.username
+
+
+class Head(models.Model):
+    department = models.OneToOneField(Department, on_delete=models.CASCADE)
+    account = models.OneToOneField(Account, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.account.user.username + '-' + self.department.name
+
 
 class Case(models.Model):
     name = models.CharField(max_length=128)
-    supervisors = models.ManyToManyField(
-        User, blank=True, related_name='supervisors')
-    analysts = models.ManyToManyField(
-        User, blank=True, related_name='analysts')
+    accounts = models.ManyToManyField(
+        Account, blank=True, related_name='accounts'
+    )
     description = models.CharField(max_length=512)
     category = models.CharField(
         max_length=32,
@@ -63,7 +95,9 @@ class Job(models.Model):
 
 class CallDetailRecord(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE, default=-1)
-    geohash = models.CharField(max_length=16, default=None, null=True, blank=True)
+    geohash = models.CharField(
+        max_length=16, default=None, null=True, blank=True
+    )
     yyyymm = models.BigIntegerField(default=-1)
     timestamp = models.BigIntegerField()
     servedimsi = models.BigIntegerField()
