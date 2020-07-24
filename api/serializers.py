@@ -14,11 +14,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = '__all__'
 
-class HeadSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Head
-        fields = '__all__'
-
 class CaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Case

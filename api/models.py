@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 class Department(models.Model):
     name = models.CharField(max_length=128)
     zone = models.CharField(max_length=128)
+    head = models.CharField(max_length=128, default=None, null=True)
 
     def __str__(self):
         return self.name
@@ -29,14 +30,6 @@ class Account(models.Model):
 
     def __str__(self):
         return self.user.username
-
-
-class Head(models.Model):
-    department = models.OneToOneField(Department, on_delete=models.CASCADE)
-    account = models.OneToOneField(Account, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.account.user.username + '-' + self.department.name
 
 
 class Case(models.Model):
