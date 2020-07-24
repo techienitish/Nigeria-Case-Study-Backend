@@ -1,4 +1,6 @@
 from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
@@ -8,9 +10,24 @@ from .models import *
 from .serializers import *
 
 
-class DepartmentViewSet(viewsets.ModelViewSet):
-    queryset = Department.objects.all()
-    serializer_class = DepartmentSerializer
+class ListDepartments(APIView):
+
+    def get(self, request, format=None):
+        departments = Department.objects.all().values()
+        
+        for department in departments:
+            accountsInDepartment = Account.objects.filter(department=department['id']).values()
+            headOfDepartment = Head.objects.filter(department=department['id']).values().first()
+            headOfDepartment = Account.objects.filter(id=headOfDepartment['account_id']).values().first()
+            department['accounts'] = accountsInDepartment
+            department['head'] = headOfDepartment
+        
+        return Response(departments)
+
+
+class AccountViewSet(viewsets.ModelViewSet):
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
 
 
 class CaseViewSet(viewsets.ModelViewSet):

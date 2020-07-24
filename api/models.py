@@ -77,8 +77,8 @@ class Job(models.Model):
     status = models.CharField(
         max_length=32,
         choices=[
-            ('Pending', 'Pending'),
-            ('Completed', 'Completed')
+            ('PENDING', 'PENDING'),
+            ('FINISHED', 'FINISHED')
         ]
     )
     category = models.CharField(
