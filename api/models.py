@@ -61,6 +61,8 @@ class Case(models.Model):
             ('Delayed', 'Delayed')
         ]
     )
+    permissibleStartDate = models.DateTimeField(default=None, null=True, blank=True)
+    permissibleEndDate = models.DateTimeField(default=None, null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -70,6 +72,7 @@ class Case(models.Model):
 
 class Job(models.Model):
     case = models.ForeignKey(Case, on_delete=models.CASCADE)
+    query = models.CharField(max_length=128, default=None, null=True)
     serverJobId = models.IntegerField(default=-1)
     status = models.CharField(
         max_length=32,
