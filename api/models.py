@@ -1,3 +1,6 @@
+import requests
+from django.conf import settings
+from django.db.models.signals import post_save
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -66,7 +69,7 @@ class Case(models.Model):
 class Job(models.Model):
     case = models.ForeignKey(Case, on_delete=models.CASCADE)
     query = models.CharField(max_length=128, default=None, null=True)
-    serverJobId = models.IntegerField(default=-1)
+    serverJobId = models.CharField(max_length=128, default=None, null=True)
     status = models.CharField(
         max_length=32,
         choices=[
@@ -87,6 +90,33 @@ class Job(models.Model):
     eventEndDate = models.DateTimeField(default=None, null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
+
+
+def create_server_job(sender, instance, **kwargs):
+    jobId = instance.id
+    query = instance.query
+    category = instance.category
+    eventStartDate = instance.eventStartDate
+    eventEndDate = instance.eventEndDate
+    payload = {
+        'startTime': '1588219377000',
+        'endTime': '1588419377000',
+    }
+    if category == 'IMSI':
+        endpoint = 'http://{}/ontrack-webservice/imsilocations'.format(settings.BIG_DATA_HOST)
+        payload['imsi'] = query
+    elif category == 'IMEI':
+        endpoint = 'http://{}/ontrack-webservice/imeilocations'.format(settings.BIG_DATA_HOST)
+        payload['imei'] = query
+    elif category == 'MSISDN':
+        endpoint = 'http://{}/ontrack-webservice/msisdnlocations'.format(settings.BIG_DATA_HOST)
+        payload['msisdn'] = query
+    response = requests.get(endpoint, params=payload)
+    response = response.json()
+    serverJobId = response['requestID']
+    Job.objects.filter(pk=jobId).update(serverJobId=serverJobId)
+
+post_save.connect(create_server_job, sender=Job)
 
 
 class CallDetailRecord(models.Model):
