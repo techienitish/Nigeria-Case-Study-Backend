@@ -1,11 +1,37 @@
 import uuid
 import requests
+import paramiko
+import pyarrow.parquet as pq
+import numpy as np
+from sqlalchemy import create_engine
 from django.conf import settings
 from django_cron import CronJobBase, Schedule
 from .models import Job
 
-statusEndpoint = 'http://{}/ontrack-webservice/status'.format(
-    settings.BIG_DATA_HOST)
+paramiko.util.log_to_file('./paramiko.log')
+
+hostname = settings.BIG_DATA_HOST
+statusEndpoint = 'http://{}/ontrack-webservice/status'.format(hostname)
+
+hostname = hostname[:hostname.index(':')]   # To remove port portion
+username = settings.BIG_DATA_USERNAME
+keyFilePath = settings.BIG_DATA_HOST_PRIVATE_KEY_FILE_PATH
+
+
+def ingestParquetFile(localJobId):
+    df = pq.read_table(source='temp.parquet').to_pandas()
+    df['job_id'] = localJobId
+    df.columns = map(str.lower, df.columns)
+    str_df = df.select_dtypes([np.object])
+    str_df = str_df.stack().str.decode('utf-8').unstack()
+
+    for col in str_df:
+        df[col] = str_df[col]
+
+    engine = create_engine(
+        'postgresql://ghost:password@localhost:5432/sampledb'
+    )
+    df.to_sql('api_calldetailrecord', engine, if_exists='raise', index=False)
 
 
 class FetchRecordsFromBigData(CronJobBase):
@@ -15,13 +41,29 @@ class FetchRecordsFromBigData(CronJobBase):
 
     def do(self):
         pendingJobs = Job.objects.filter(status='PENDING')
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname, username=username, key_filename=keyFilePath)
+        sftp = ssh.open_sftp()
+        localFilePath = 'temp.parquet'
+
         for job in pendingJobs:
+            localJobId = job.id
             payload = {'requestID': job.serverJobId}
             try:
                 response = requests.get(statusEndpoint, params=payload)
                 response = response.json()
                 if response['status'] == 'FINISHED':
-                    cdrParquetFilePath = response['outputFile']
-                    print(cdrParquetFilePath)
+                    remoteFilePath = response['outputFile']
+                    remoteFilePath = '/home/centos/autodata/Output/f6069e87-a0e0-4842-9081-b49e451a7e5f/response.parquet'
+                    print(remoteFilePath)
+                    sftp.get(remoteFilePath, localFilePath)
+                    ingestParquetFile(localJobId)
+                    Job.objects.filter(pk=localJobId).update(status='FINISHED')
+                    
             except Exception as ex:
-                print('Invalid server job id: {}'.format(job.serverJobId))
+                print('Error for job id: {}'.format(job.serverJobId))
+                print(ex)
+
+        sftp.close()
+        ssh.close()
