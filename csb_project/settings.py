@@ -48,7 +48,17 @@ INSTALLED_APPS = [
     'django_extensions',
     'drf_yasg',
     'api',
+    'django_cron',
 ]
+
+CRON_CLASSES = [
+    'api.cron.FetchRecordsFromBigData',
+]
+
+"""
+CRON COMMAND:
+* * * * * cd /Users/wl/Code/Python/Nigeria-Case-Study-Backend && source env/bin/activate && python manage.py runcrons >> cronjobs.log
+"""
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
