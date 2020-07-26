@@ -4,6 +4,9 @@ from django.db.models.signals import post_save
 from django.db import models
 from django.contrib.auth.models import User
 
+hostname = settings.BIG_DATA_HOST
+port = settings.BIG_DATA_PORT
+
 
 class Department(models.Model):
     name = models.CharField(max_length=128, default=None, null=True)
@@ -25,10 +28,15 @@ class Account(models.Model):
             ('Admin', 'Admin'),
             ('Supervisor', 'Supervisor'),
             ('Analyst', 'Analyst'),
-        ]
+        ],
+        default='Analyst',
     )
     department = models.ForeignKey(
-        Department, on_delete=models.CASCADE, related_name='department'
+        Department,
+        on_delete=models.CASCADE,
+        related_name='department',
+        default=None,
+        null=True,
     )
 
     def __str__(self):
@@ -47,7 +55,9 @@ class Case(models.Model):
             ('Robbery', 'Robbery'),
             ('Theft', 'Theft'),
             ('Bomb Blast', 'Bomb Blast'),
-        ]
+            ('Other', 'Other'),
+        ],
+        default='Other'
     )
     status = models.CharField(
         max_length=32,
@@ -55,7 +65,8 @@ class Case(models.Model):
             ('Open', 'Open'),
             ('Close', 'Close'),
             ('Delayed', 'Delayed')
-        ]
+        ],
+        default='Open'
     )
     permissibleStartDate = models.DateTimeField(default=None, null=True, blank=True)
     permissibleEndDate = models.DateTimeField(default=None, null=True, blank=True)
@@ -75,7 +86,8 @@ class Job(models.Model):
         choices=[
             ('PENDING', 'PENDING'),
             ('FINISHED', 'FINISHED')
-        ]
+        ],
+        default='Pending',
     )
     category = models.CharField(
         max_length=32,
@@ -84,7 +96,8 @@ class Job(models.Model):
             ('IMEI', 'IMEI'),
             ('MSISDN', 'MSISDN'),
             ('Cell Site', 'Cell Site'),
-        ]
+        ],
+        default='IMSI'
     )
     eventStartDate = models.DateTimeField(default=None, null=True, blank=True)
     eventEndDate = models.DateTimeField(default=None, null=True, blank=True)
@@ -98,19 +111,22 @@ def create_server_job(sender, instance, **kwargs):
     category = instance.category
     eventStartDate = instance.eventStartDate
     eventEndDate = instance.eventEndDate
+    
     payload = {
-        'startTime': '1588219377000',   # Should be removed
-        'endTime': '1588419377000',
+        'startTime': eventStartDate,   # Should be removed
+        'endTime': eventEndDate,
     }
+
     if category == 'IMSI':
-        endpoint = 'http://{}/ontrack-webservice/imsilocations'.format(settings.BIG_DATA_HOST)
+        endpoint = 'http://{}:{}/ontrack-webservice/imsilocations'.format(hostname, port)
         payload['imsi'] = query
     elif category == 'IMEI':
-        endpoint = 'http://{}/ontrack-webservice/imeilocations'.format(settings.BIG_DATA_HOST)
+        endpoint = 'http://{}:{}/ontrack-webservice/imeilocations'.format(hostname, port)
         payload['imei'] = query
     elif category == 'MSISDN':
-        endpoint = 'http://{}/ontrack-webservice/msisdnlocations'.format(settings.BIG_DATA_HOST)
+        endpoint = 'http://{}:{}/ontrack-webservice/msisdnlocations'.format(hostname, port)
         payload['msisdn'] = query
+
     response = requests.get(endpoint, params=payload)
     response = response.json()
     serverJobId = response['requestID']

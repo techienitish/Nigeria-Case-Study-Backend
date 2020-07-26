@@ -1,10 +1,13 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework.views import APIView
+from rest_framework import status, generics
 from rest_framework.response import Response
 
 from ..models import Department, Account
 from ..serializers import DepartmentSerializer, AccountSerializer
 
-class ListDepartments(APIView):
+class DepartmentList(APIView):
 
     def get(self, request, format='json'):
         departments = Department.objects.all().values()
@@ -22,3 +25,6 @@ class ListDepartments(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class DepartmentDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer

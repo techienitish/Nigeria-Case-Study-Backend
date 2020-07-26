@@ -11,9 +11,10 @@ from .models import Job
 paramiko.util.log_to_file('./paramiko.log')
 
 hostname = settings.BIG_DATA_HOST
-statusEndpoint = 'http://{}/ontrack-webservice/status'.format(hostname)
+port = settings.BIG_DATA_PORT
 
-hostname = hostname[:hostname.index(':')]   # To remove port portion
+statusEndpoint = 'http://{}:{}/ontrack-webservice/status'.format(hostname, port)
+
 username = settings.BIG_DATA_USERNAME
 keyFilePath = settings.BIG_DATA_HOST_PRIVATE_KEY_FILE_PATH
 
@@ -55,8 +56,7 @@ class FetchRecordsFromBigData(CronJobBase):
                 response = response.json()
                 if response['status'] == 'FINISHED':
                     remoteFilePath = response['outputFile']
-                    remoteFilePath = '/home/centos/autodata/Output/f6069e87-a0e0-4842-9081-b49e451a7e5f/response.parquet'
-                    print(remoteFilePath)
+                    #remoteFilePath = '/home/centos/autodata/Output/f6069e87-a0e0-4842-9081-b49e451a7e5f/response.parquet'
                     sftp.get(remoteFilePath, localFilePath)
                     ingestParquetFile(localJobId)
                     Job.objects.filter(pk=localJobId).update(status='FINISHED')
