@@ -32,7 +32,7 @@ def ingestParquetFile(localJobId):
     engine = create_engine(
         'postgresql://ghost:password@localhost:5432/sampledb'
     )
-    df.to_sql('api_calldetailrecord', engine, if_exists='raise', index=False)
+    df.to_sql('api_calldetailrecord', engine, if_exists='append', index=False)
 
 
 class FetchRecordsFromBigData(CronJobBase):

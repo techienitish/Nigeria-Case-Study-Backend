@@ -95,12 +95,13 @@ class Job(models.Model):
             ('IMSI', 'IMSI'),
             ('IMEI', 'IMEI'),
             ('MSISDN', 'MSISDN'),
-            ('Cell Site', 'Cell Site'),
+            ('Location', 'Location'),
+            ('LAC/Cell-ID', 'LAC/Cell-ID'),
         ],
         default='IMSI'
     )
-    eventStartDate = models.DateTimeField(default=None, null=True, blank=True)
-    eventEndDate = models.DateTimeField(default=None, null=True, blank=True)
+    startTime = models.BigIntegerField(default=-1)
+    endTime = models.BigIntegerField(default=-1)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -109,12 +110,12 @@ def create_server_job(sender, instance, **kwargs):
     jobId = instance.id
     query = instance.query
     category = instance.category
-    eventStartDate = instance.eventStartDate
-    eventEndDate = instance.eventEndDate
+    startTime = instance.startTime
+    endTime = instance.endTime
     
     payload = {
-        'startTime': eventStartDate,   # Should be removed
-        'endTime': eventEndDate,
+        'startTime': startTime,
+        'endTime': endTime,
     }
 
     if category == 'IMSI':
@@ -126,6 +127,18 @@ def create_server_job(sender, instance, **kwargs):
     elif category == 'MSISDN':
         endpoint = 'http://{}:{}/ontrack-webservice/msisdnlocations'.format(hostname, port)
         payload['msisdn'] = query
+    elif category == 'Location':
+        queryArr = query.split(',')
+        payload['lat'] = queryArr[0]
+        payload['lon'] = queryArr[1]
+        payload['distance'] = queryArr[2]
+        endpoint = 'http://{}:{}/ontrack-webservice/locations'.format(hostname, port)
+    elif category == 'LAC/Cell-ID':
+        queryArr = query.split(',')
+        payload['lac'] = queryArr[0].strip()
+        payload['cellid'] = queryArr[1].strip()
+        payload['distance'] = queryArr[2].strip()
+        endpoint = 'http://{}:{}/ontrack-webservice/celllocations'.format(hostname, port)
 
     response = requests.get(endpoint, params=payload)
     response = response.json()

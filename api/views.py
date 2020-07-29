@@ -21,7 +21,7 @@ class JobViewSet(viewsets.ModelViewSet):
     serializer_class = JobSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ['case', 'serverJobId', 'status',
-                        'category', 'eventStartDate', 'eventEndDate']
+                        'category', 'startTime', 'endTime']
 
 
 class CallDetailRecordViewSet(viewsets.ModelViewSet):
