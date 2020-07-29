@@ -5,6 +5,7 @@ from django_filters import rest_framework as filters
 
 from .models import *
 from .serializers import *
+from csb_project.pagination import CustomPagination
 
 
 class CaseViewSet(viewsets.ModelViewSet):
@@ -28,6 +29,7 @@ class CallDetailRecordViewSet(viewsets.ModelViewSet):
     serializer_class = CallDetailRecordSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ['job', ]
+    pagination_class = CustomPagination
 
     def get_queryset(self):
         return CallDetailRecord.objects.filter().order_by('id')

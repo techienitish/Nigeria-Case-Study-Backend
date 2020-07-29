@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework import status, generics, mixins
 from rest_framework.response import Response
 
-from ..models import Account, Department
+from ..models import Account, Department, Case
 from ..serializers import AccountSerializer
 
 class AccountsList(APIView):
@@ -17,9 +17,11 @@ class AccountsList(APIView):
         for account in accounts:
             user = User.objects.filter(id=account['user_id']).values().first()
             department = Department.objects.filter(id=account['department_id']).values().first()
+            cases = Case.objects.filter(accounts__in=[account['id']]).values()
+            account['cases'] = cases
+            account['department'] = department
             account['name'] = user['first_name']
             account['username'] = user['username']
-            account['department'] = department
             del account['user_id']
             del account['department_id']
 
