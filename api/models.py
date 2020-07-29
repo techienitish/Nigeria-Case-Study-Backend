@@ -1,8 +1,9 @@
 import requests
 from django.conf import settings
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import ArrayField
 
 hostname = settings.BIG_DATA_HOST
 port = settings.BIG_DATA_PORT
@@ -43,10 +44,23 @@ class Account(models.Model):
         return self.user.username
 
 
+def delete_user_on_account_removal(sender, instance, **kwargs):
+    user_id = instance.user.id
+    user = User.objects.get(pk=user_id)
+    user.delete()
+
+
+post_delete.connect(delete_user_on_account_removal, sender=Account)
+
+
 class Case(models.Model):
     name = models.CharField(max_length=128, default=None, null=True)
     accounts = models.ManyToManyField(
         Account, blank=True, related_name='accounts'
+    )
+    targets = ArrayField(
+        models.CharField(max_length=128),
+        default=list,
     )
     description = models.CharField(max_length=512)
     category = models.CharField(
@@ -68,8 +82,6 @@ class Case(models.Model):
         ],
         default='Open'
     )
-    permissibleStartDate = models.DateTimeField(default=None, null=True, blank=True)
-    permissibleEndDate = models.DateTimeField(default=None, null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
@@ -112,38 +124,44 @@ def create_server_job(sender, instance, **kwargs):
     category = instance.category
     startTime = instance.startTime
     endTime = instance.endTime
-    
+
     payload = {
         'startTime': startTime,
         'endTime': endTime,
     }
 
     if category == 'IMSI':
-        endpoint = 'http://{}:{}/ontrack-webservice/imsilocations'.format(hostname, port)
+        endpoint = 'http://{}:{}/ontrack-webservice/imsilocations'.format(
+            hostname, port)
         payload['imsi'] = query
     elif category == 'IMEI':
-        endpoint = 'http://{}:{}/ontrack-webservice/imeilocations'.format(hostname, port)
+        endpoint = 'http://{}:{}/ontrack-webservice/imeilocations'.format(
+            hostname, port)
         payload['imei'] = query
     elif category == 'MSISDN':
-        endpoint = 'http://{}:{}/ontrack-webservice/msisdnlocations'.format(hostname, port)
+        endpoint = 'http://{}:{}/ontrack-webservice/msisdnlocations'.format(
+            hostname, port)
         payload['msisdn'] = query
     elif category == 'Location':
         queryArr = query.split(',')
         payload['lat'] = queryArr[0]
         payload['lon'] = queryArr[1]
         payload['distance'] = queryArr[2]
-        endpoint = 'http://{}:{}/ontrack-webservice/locations'.format(hostname, port)
+        endpoint = 'http://{}:{}/ontrack-webservice/locations'.format(
+            hostname, port)
     elif category == 'LAC/Cell-ID':
         queryArr = query.split(',')
         payload['lac'] = queryArr[0].strip()
         payload['cellid'] = queryArr[1].strip()
         payload['distance'] = queryArr[2].strip()
-        endpoint = 'http://{}:{}/ontrack-webservice/celllocations'.format(hostname, port)
+        endpoint = 'http://{}:{}/ontrack-webservice/celllocations'.format(
+            hostname, port)
 
     response = requests.get(endpoint, params=payload)
     response = response.json()
     serverJobId = response['requestID']
     Job.objects.filter(pk=jobId).update(serverJobId=serverJobId)
+
 
 post_save.connect(create_server_job, sender=Job)
 
@@ -172,14 +190,17 @@ class CallDetailRecord(models.Model):
     diagnostics = models.BigIntegerField(default=-1)
     callreference = models.CharField(max_length=128, default=None, null=True)
     sequencenumber = models.BigIntegerField(default=-1)
-    networkcallreference = models.CharField(max_length=128, default=None, null=True)
+    networkcallreference = models.CharField(
+        max_length=128, default=None, null=True)
     mscaddress = models.BigIntegerField(default=-1)
     systemtype = models.CharField(max_length=128, default=None, null=True)
     chargedparty = models.CharField(max_length=128, default=None, null=True)
     calledimsi = models.BigIntegerField(default=-1)
-    subscribercategory = models.CharField(max_length=128, default=None, null=True)
+    subscribercategory = models.CharField(
+        max_length=128, default=None, null=True)
     firstmccmnc = models.CharField(max_length=128, default=None, null=True)
-    intermediatemccmnc = models.CharField(max_length=128, default=None, null=True)
+    intermediatemccmnc = models.CharField(
+        max_length=128, default=None, null=True)
     lastmccmnc = models.CharField(max_length=128, default=None, null=True)
     usertype = models.CharField(max_length=128, default=None, null=True)
     recordnumber = models.BigIntegerField(default=-1)
@@ -192,7 +213,8 @@ class CallDetailRecord(models.Model):
     calledimei = models.BigIntegerField(default=-1)
     drccallid = models.CharField(max_length=128, default=None, null=True)
     callredirectionflag = models.BigIntegerField(default=-1)
-    globalcallreference = models.CharField(max_length=128, default=None, null=True)
+    globalcallreference = models.CharField(
+        max_length=128, default=None, null=True)
     callerportedflag = models.BigIntegerField(default=-1)
     connectednumber = models.CharField(max_length=128, default=None, null=True)
     smsuserdatatype = models.CharField(max_length=128, default=None, null=True)
