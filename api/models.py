@@ -99,7 +99,7 @@ class Job(models.Model):
             ('PENDING', 'PENDING'),
             ('FINISHED', 'FINISHED')
         ],
-        default='Pending',
+        default='PENDING',
     )
     category = models.CharField(
         max_length=32,

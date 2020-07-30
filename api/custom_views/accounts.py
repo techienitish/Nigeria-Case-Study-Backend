@@ -19,7 +19,7 @@ class AccountsList(APIView):
             user = User.objects.filter(id=account['user_id']).values().first()
             department = Department.objects.filter(
                 id=account['department_id']).values().first()
-            cases = Case.objects.filter(accounts__in=[account['id']]).values()
+            cases = Case.objects.filter(accounts__in=[account['id']]).exclude(name='DEFAULT_CASE_CHECK_OT').values()
             account['cases'] = cases
             account['department'] = department
             account['name'] = user['first_name']
