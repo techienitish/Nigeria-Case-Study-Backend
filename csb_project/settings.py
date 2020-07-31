@@ -109,7 +109,7 @@ WSGI_APPLICATION = 'csb_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'sampledb',
+        'NAME': 'devdb',
         'USER': 'ghost',
         'PASSWORD': 'password',
         'HOST': 'localhost',
