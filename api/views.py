@@ -7,7 +7,6 @@ from .models import *
 from .serializers import *
 from csb_project.pagination import CustomPagination
 
-
 class CaseViewSet(viewsets.ModelViewSet):
     queryset = Case.objects.all()
     serializer_class = CaseSerializer
@@ -22,6 +21,11 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ['case', 'serverJobId', 'status',
                         'category', 'startTime', 'endTime']
+
+
+class HandsetHistoryViewSet(viewsets.ModelViewSet):
+    queryset = HandsetHistory.objects.all()
+    serializer_class = HandsetHistorySerializer
 
 
 class CallDetailRecordViewSet(viewsets.ModelViewSet):

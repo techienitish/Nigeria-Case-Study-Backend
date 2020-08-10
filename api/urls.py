@@ -10,6 +10,7 @@ from .custom_views.cdr_columns import *
 router = routers.DefaultRouter()
 router.register('cases', CaseViewSet)
 router.register('jobs', JobViewSet)
+router.register('handset_history', HandsetHistoryViewSet)
 router.register('cdr', CallDetailRecordViewSet)
 
 urlpatterns = [

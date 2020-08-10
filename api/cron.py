@@ -13,7 +13,10 @@ paramiko.util.log_to_file('./paramiko.log')
 hostname = settings.BIG_DATA_HOST
 port = settings.BIG_DATA_PORT
 
-statusEndpoint = 'http://{}:{}/ontrack-webservice/status'.format(hostname, port)
+statusEndpoint = 'http://{}:{}/ontrack-webservice/status'.format(
+    hostname,
+    port
+)
 
 username = settings.BIG_DATA_USERNAME
 keyFilePath = settings.BIG_DATA_HOST_PRIVATE_KEY_FILE_PATH
@@ -30,9 +33,26 @@ def ingestParquetFile(localJobId):
         df[col] = str_df[col]
 
     engine = create_engine(
-        'postgresql://ghost:password@localhost:5432/sampledb'
+        'postgresql://ghost:password@localhost:5432/devdb'
     )
     df.to_sql('api_calldetailrecord', engine, if_exists='append', index=False)
+
+
+def ingestHandsetHistoryParquetFile(localJobId):
+    df = pq.read_table(source='temp.parquet').to_pandas()
+    df = df[df['type'].notnull()]
+    df['job_id'] = localJobId
+    df.columns = map(str.lower, df.columns)
+    str_df = df.select_dtypes([np.object])
+    str_df = str_df.stack().str.decode('utf-8').unstack()
+
+    for col in str_df:
+        df[col] = str_df[col]
+
+    engine = create_engine(
+        'postgresql://ghost:password@localhost:5432/devdb'
+    )
+    df.to_sql('api_handsethistory', engine, if_exists='append', index=False)
 
 
 class FetchRecordsFromBigData(CronJobBase):
@@ -60,7 +80,27 @@ class FetchRecordsFromBigData(CronJobBase):
                     sftp.get(remoteFilePath, localFilePath)
                     ingestParquetFile(localJobId)
                     Job.objects.filter(pk=localJobId).update(status='FINISHED')
-                    
+
+            except Exception as ex:
+                print('Error for job id: {}'.format(job.serverJobId))
+                print(ex)
+
+        # Handset History
+        pendingJobs = Job.objects.filter(handsetHistoryStatus='PENDING')
+        for job in pendingJobs:
+            localJobId = job.id
+            payload = {'requestID': job.handsetHistoryJobId}
+            try:
+                response = requests.get(statusEndpoint, params=payload)
+                response = response.json()
+                if response['status'] == 'FINISHED':
+                    remoteFilePath = response['outputFile']
+                    #remoteFilePath = '/home/centos/autodata/Output/f6069e87-a0e0-4842-9081-b49e451a7e5f/response.parquet'
+                    sftp.get(remoteFilePath, localFilePath)
+                    ingestHandsetHistoryParquetFile(localJobId)
+                    Job.objects.filter(pk=localJobId).update(
+                        handsetHistoryStatus='FINISHED')
+
             except Exception as ex:
                 print('Error for job id: {}'.format(job.serverJobId))
                 print(ex)

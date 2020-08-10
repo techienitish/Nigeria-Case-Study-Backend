@@ -93,7 +93,17 @@ class Job(models.Model):
     case = models.ForeignKey(Case, on_delete=models.CASCADE)
     query = models.CharField(max_length=128, default=None, null=True)
     serverJobId = models.CharField(max_length=128, default=None, null=True)
+    handsetHistoryJobId = models.CharField(
+        max_length=128, default=None, null=True)
     status = models.CharField(
+        max_length=32,
+        choices=[
+            ('PENDING', 'PENDING'),
+            ('FINISHED', 'FINISHED')
+        ],
+        default='PENDING',
+    )
+    handsetHistoryStatus = models.CharField(
         max_length=32,
         choices=[
             ('PENDING', 'PENDING'),
@@ -162,12 +172,47 @@ def create_server_job(sender, instance, **kwargs):
     serverJobId = response['requestID']
     Job.objects.filter(pk=jobId).update(serverJobId=serverJobId)
 
+    payload = {
+        'startTime': startTime,
+        'endTime': endTime,
+        'type': str(category).lower(),
+        'number': query,
+    }
+    endpoint = 'http://{}:{}/ontrack-webservice/mappings'.format(
+        hostname,
+        port
+    )
+    response = requests.get(endpoint, params=payload)
+    response = response.json()
+    handsetHistoryJobId = response['requestID']
+    Job.objects.filter(pk=jobId).update(
+        handsetHistoryJobId=handsetHistoryJobId)
+
 
 post_save.connect(create_server_job, sender=Job)
 
 
-class CallDetailRecord(models.Model):
+class HandsetHistory(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE, default=-1)
+    history_type = models.CharField(
+        max_length=32,
+        choices=[
+            ('imsi', 'imsi'),
+            ('imei', 'imei'),
+            ('msisdn', 'msisdn'),
+        ],
+        default=None,
+        db_column='type',
+        null=True,
+    )
+    msisdnorimei = models.CharField(max_length=32)
+    imsi = models.CharField(max_length=32)
+    startTime = models.BigIntegerField(default=-1, db_column='starttime')
+    endTime = models.BigIntegerField(default=-1, db_column='endtime')
+
+
+class CallDetailRecord(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
     geohash = models.CharField(
         max_length=16, default=None, null=True, blank=True
     )

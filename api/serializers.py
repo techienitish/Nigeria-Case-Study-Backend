@@ -25,6 +25,10 @@ class JobSerializer(serializers.ModelSerializer):
         model = Job
         fields = '__all__'
 
+class HandsetHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HandsetHistory
+        fields = '__all__'
 
 class CallDetailRecordSerializer(serializers.ModelSerializer):
     class Meta:
