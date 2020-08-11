@@ -14,6 +14,23 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = '__all__'
 
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = '__all__'
+
+
+class ZoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Zone
+        fields = '__all__'
+
+class PoiSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Poi
+        fields = '__all__'
+
 class CaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Case
@@ -25,10 +42,12 @@ class JobSerializer(serializers.ModelSerializer):
         model = Job
         fields = '__all__'
 
+
 class HandsetHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = HandsetHistory
         fields = '__all__'
+
 
 class CallDetailRecordSerializer(serializers.ModelSerializer):
     class Meta:

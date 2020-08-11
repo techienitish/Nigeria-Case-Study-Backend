@@ -13,15 +13,25 @@ class Department(models.Model):
     name = models.CharField(max_length=128, default=None, null=True)
     zone = models.CharField(max_length=128, default=None, null=True)
     head = models.CharField(max_length=128, default=None, null=True)
+    city = models.CharField(max_length=128, default=None, null=True)
+    lga = models.CharField(max_length=128, default=None, null=True)
+    state = models.CharField(max_length=128, default=None, null=True)
 
     def __str__(self):
         return self.name
+
+
+class Group(models.Model):
+    name = models.CharField(max_length=128, default=None, null=True)
 
 
 class Account(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='user'
     )
+    group = models.ForeignKey(
+        Group, on_delete=models.CASCADE, default=None, null=True)
+    phone = models.CharField(max_length=16, default=None, null=True)
     disabled = models.BooleanField(default=False)
     designation = models.CharField(
         max_length=32,
@@ -39,6 +49,8 @@ class Account(models.Model):
         default=None,
         null=True,
     )
+    startDate = models.BigIntegerField(default=-1)
+    endDate = models.BigIntegerField(default=-1)
 
     def __str__(self):
         return self.user.username
@@ -63,6 +75,9 @@ class Case(models.Model):
         default=list,
     )
     description = models.CharField(max_length=512)
+    teamLead = models.ForeignKey(Account, on_delete=models.CASCADE, null=True)
+    department = models.ForeignKey(
+        Department, on_delete=models.CASCADE, null=True)
     category = models.CharField(
         max_length=32,
         choices=[
@@ -82,11 +97,35 @@ class Case(models.Model):
         ],
         default='Open'
     )
+    startDate = models.BigIntegerField(default=-1)
+    endDate = models.BigIntegerField(default=-1)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
+
+
+class Zone(models.Model):
+    name = models.CharField(max_length=128, default=None, null=True)
+    description = models.CharField(max_length=512, default=None, null=True)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, null=True)
+    lat1 = models.FloatField(default=-1)
+    lng1 = models.FloatField(default=-1)
+    lat2 = models.FloatField(default=-1)
+    lng2 = models.FloatField(default=-1)
+    area = models.FloatField(default=-1)
+
+
+class Poi(models.Model):
+    name = models.CharField(max_length=128, default=None, null=True)
+    description = models.CharField(max_length=512, default=None, null=True)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, null=True)
+    address = models.CharField(max_length=256, default=None, null=True)
+    city = models.CharField(max_length=512, default=None, null=True)
+    zipcode = models.BigIntegerField(default=-1)
+    lat = models.FloatField(default=-1)
+    lng = models.FloatField(default=-1)
 
 
 class Job(models.Model):
