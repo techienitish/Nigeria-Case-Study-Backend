@@ -48,9 +48,7 @@ class CustomAuth(APIView):
             endDate = account['endDate']
             disabled = account['disabled']
 
-            current_unix_timestamp = int(time.time())
-
-            print(endDate, current_unix_timestamp, disabled)
+            current_unix_timestamp = int(round(time.time() * 1000))
 
             if current_unix_timestamp < endDate and disabled == False:
                 return Response(account, status=status.HTTP_200_OK)
