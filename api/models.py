@@ -110,10 +110,8 @@ class Zone(models.Model):
     name = models.CharField(max_length=128, default=None, null=True)
     description = models.CharField(max_length=512, default=None, null=True)
     case = models.ForeignKey(Case, on_delete=models.CASCADE, null=True)
-    lat1 = models.FloatField(default=-1)
-    lng1 = models.FloatField(default=-1)
-    lat2 = models.FloatField(default=-1)
-    lng2 = models.FloatField(default=-1)
+    lat1 = models.CharField(max_length=100)
+    lng1 = models.CharField(max_length=100)
     area = models.FloatField(default=-1)
 
 

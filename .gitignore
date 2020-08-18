@@ -2,3 +2,5 @@ db.sqlite3
 cronjobs.log
 paramiko.log
 env
+*.pyc
+__pycache__/
