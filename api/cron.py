@@ -20,7 +20,7 @@ statusEndpoint = 'http://{}:{}/ontrack-webservice/status'.format(
 
 username = settings.BIG_DATA_USERNAME
 keyFilePath = settings.BIG_DATA_HOST_PRIVATE_KEY_FILE_PATH
-
+password = settings.BIG_DATA_HOST_PASSWORD
 
 def ingestParquetFile(localJobId):
     df = pq.read_table(source='temp.parquet').to_pandas()
@@ -64,7 +64,7 @@ class FetchRecordsFromBigData(CronJobBase):
         pendingJobs = Job.objects.filter(status='PENDING')
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname, username=username, key_filename=keyFilePath)
+        ssh.connect(hostname, username=username, password = password)
         sftp = ssh.open_sftp()
         localFilePath = 'temp.parquet'
 
