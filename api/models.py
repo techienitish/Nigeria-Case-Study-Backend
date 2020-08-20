@@ -255,6 +255,9 @@ class CallDetailRecord(models.Model):
     geohash = models.CharField(
         max_length=16, default=None, null=True, blank=True
     )
+    lac = models.FloatField(default=-1)
+    cellId = models.FloatField(default=-1)
+    eventType = models.CharField(max_length=128, default=None, null=True)
     yyyymm = models.BigIntegerField(default=-1, null=True)
     timestamp = models.BigIntegerField(default=-1)
     timebucket = models.CharField(max_length=128, default=None, null=True)
